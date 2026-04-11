@@ -1,0 +1,21 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+// IL BLOCCO 'buildscript {}' DEVE VENIRE PRIMA DI 'plugins {}'
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://chaquo.com/maven' }
+    }
+    dependencies {
+        classpath 'com.chaquo.python:gradle:16.1.0'
+    }
+}
+
+plugins {
+    id 'com.android.application' version '8.4.1' apply false
+    id 'com.android.library' version '8.4.1' apply false
+    id 'org.jetbrains.kotlin.android' version '1.9.23' apply false
+}
+
+// ELIMINA la sezione allprojects { repositories { ... } } se presente

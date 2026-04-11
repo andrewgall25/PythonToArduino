@@ -1,0 +1,24 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+        maven { url 'https://chaquo.com/maven' }
+        maven { url 'https://jitpack.io' } // 👈 QUESTO SERVE
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url "https://jitpack.io" }
+        maven { url 'https://chaquo.com/maven' }
+    }
+}
+
+rootProject.name = "PythonToArduino"
+include ':app'
+
+

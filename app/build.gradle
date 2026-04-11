@@ -1,0 +1,99 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    // Applica il plugin Chaquopy
+    id 'com.chaquo.python' // <--- Assicurati che questa riga sia presente
+}
+
+android {
+    namespace 'com.andrea.pythontoarduino' // Sostituisci con il namespace della tua app
+    compileSdk 34 // Sostituisci con la tua compileSdk
+
+    defaultConfig {
+        applicationId "com.andrea.pythontoarduino" // Sostituisci con l'ID della tua app
+        minSdk 24
+        targetSdk 34 // Sostituisci con la tua targetSdk
+        versionCode 46
+        versionName "2.0.1.a"
+
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Configurazione Chaquopy (esempio)
+        python {
+            // Versione di Python da usare (es. "3.8", "3.9", "3.10", "3.11")
+            // Controlla la documentazione di Chaquopy per le versioni supportate
+            version "3.10" // <--- Scegli la versione di Python
+
+            // Aggiungi i moduli Python qui
+            pip {
+                install "pyserial" // Esempio: se usi pyserial per comunicare via seriale
+                install "requests"
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.5.13' // O l'ultima versione stabile compatibile
+    }
+    sourceSets {
+        main {
+            assets.srcDirs += 'src/main/assets'
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.activity:activity-compose:1.8.2'
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3" // O la versione più recente stabile
+    implementation 'androidx.compose.ui:ui:1.5.4'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.material3:material3:1.1.2'
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.activity:activity-ktx:1.7.2'
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1"
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.1"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.1"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1"
+    implementation "androidx.compose.runtime:runtime-livedata:1.5.4"
+    implementation "androidx.compose.ui:ui-tooling-preview:1.5.4"
+    implementation "androidx.compose.material:material-icons-extended:1.5.4"
+    implementation "androidx.compose.material:material-icons-core:1.5.4"
+    implementation "androidx.compose.foundation:foundation:1.5.4"
+    implementation 'androidx.compose.animation:animation:1.5.4' // Questa è importante per rememberInfiniteTransition
+    implementation 'androidx.compose.animation:animation-core:1.5.4' // Anche questa è importante
+    implementation 'com.github.felHR85:UsbSerial:6.1.0'
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+    implementation "com.google.accompanist:accompanist-systemuicontroller:0.32.0"
+    debugImplementation "androidx.compose.ui:ui-tooling:1.5.4"
+    debugImplementation "androidx.compose.ui:ui-test-manifest:1.5.4"
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+
+    // Assicurati che le dipendenze di Chaquopy siano presenti
+    // Non dovresti doverle aggiungere manualmente se il plugin è applicato correttamente,
+    // ma è bene verificarle se hai problemi
+    // implementation 'com.chaquo.python:runtime:15.0.1' // Esempio
+    // implementation 'com.chaquo.python:android:15.0.1' // Esempio
+}
