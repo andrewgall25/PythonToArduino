@@ -1,12 +1,12 @@
 import requests
 import json
 
-def send_cpp_to_server(cpp_code):
-    url = "http://192.168.1.103:5000/build"
+def send_python_to_server(py_code):
+    url = "http://192.168.1.6:5000/build"
     print(f"Sending POST request to{url}")
-    print(f"C++ code sent:\n{cpp_code[:100]}...")
+    print(f"Python code sent:\n{py_code[:100]}...")
     try:
-        resp = requests.post(url, json={"code": cpp_code}, timeout=10)
+        resp = requests.post(url, json={"code": py_code}, timeout=10)
         print(f"Server response: status={resp.status_code}, text={resp.text}")
         if resp.status_code == 200:
             try:

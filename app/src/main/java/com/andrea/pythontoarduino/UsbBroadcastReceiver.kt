@@ -71,84 +71,14 @@ class UsbBroadcastReceiver : BroadcastReceiver() {
                 }
             }
 
-            ACTION_USB_PERMISSION -> {
-                Log.d(TAG, "ACTION_USB_PERMISSION ricevuto")
-                val granted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
-                var device = intent.getParcelableExtra<UsbDevice>(UsbManager.EXTRA_DEVICE)
-
-                Log.d(TAG, "Permesso concesso: $granted")
-                Log.d(TAG, "Device: ${device?.deviceName ?: "null"}")
-
-                if (device == null) {
-                    Log.w(TAG, "Device null in ACTION_USB_PERMISSION, tentando di trovare dispositivo...")
-                    val usbManager = ctx.getSystemService(Context.USB_SERVICE) as UsbManager
-                    device = usbManager.deviceList.values.find {
-                        it.vendorId == 0x2341 && it.productId == 0x0043
-                    }
-                    Log.d(TAG, "Fallback device: ${device?.deviceName ?: "null"}")
-                }
-
-                val deviceKey = device?.deviceName ?: "unknown"
-                val currentTime = System.currentTimeMillis()
-                val lastRetryTime = retryTimestamps.getOrDefault(deviceKey, 0L)
-
-                if (SerialManager.isConnected()) {
-                    Log.d(TAG, "Connessione già attiva, ignoro ACTION_USB_PERMISSION")
-                    retryCounts.remove(deviceKey)
-                    retryTimestamps.remove(deviceKey)
-                    return
-                }
+            ACTION_USB_PERMISSION -> {val granted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
+                val device = intent.getParcelableExtra<UsbDevice>(UsbManager.EXTRA_DEVICE)
 
                 if (granted && device != null) {
-                    retryCounts.remove(deviceKey)
-                    retryTimestamps.remove(deviceKey)
-                    CoroutineScope(Dispatchers.Main).launch {
-                        Toast.makeText(ctx, "Permesso USB concesso", Toast.LENGTH_SHORT).show()
-                    }
-                    Log.d(TAG, "Inizio connessione al device...")
                     connectToDeviceAsync(ctx, device)
                 } else {
-                    val currentAttempts = retryCounts.getOrDefault(deviceKey, 0)
-                    if (currentAttempts < MAX_RETRY_ATTEMPTS && device != null && (currentTime - lastRetryTime) > RETRY_TIMEOUT_MS) {
-                        retryCounts[deviceKey] = currentAttempts + 1
-                        retryTimestamps[deviceKey] = currentTime
-                        Log.d(TAG, "Riprovo a richiedere permesso per ${device.deviceName} (tentativo ${currentAttempts + 1}/$MAX_RETRY_ATTEMPTS)...")
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val result = withTimeoutOrNull(RETRY_TIMEOUT_MS) {
-                                val permissionIntent = PendingIntent.getBroadcast(
-                                    ctx.applicationContext,
-                                    System.currentTimeMillis().toInt(),
-                                    Intent(ACTION_USB_PERMISSION).apply {
-                                        setPackage(ctx.packageName)
-                                        putExtra(UsbManager.EXTRA_DEVICE, device)
-                                    },
-                                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-                                )
-                                val usbManager = ctx.getSystemService(Context.USB_SERVICE) as UsbManager
-                                usbManager.requestPermission(device, permissionIntent)
-                                Log.d(TAG, "Richiesta permesso inviata per ${device.deviceName}, requestCode: ${System.currentTimeMillis().toInt()}")
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    Toast.makeText(ctx, "Riprovo richiesta permessi USB...", Toast.LENGTH_SHORT).show()
-                                }
-                                true // Indica che la richiesta è stata inviata
-                            }
-                            if (result == null) {
-                                Log.d(TAG, "Timeout retry per ${device.deviceName}")
-                                retryCounts.remove(deviceKey)
-                                retryTimestamps.remove(deviceKey)
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    Toast.makeText(ctx, "Timeout richiesta permessi USB", Toast.LENGTH_LONG).show()
-                                }
-                            }
-                        }
-                    } else {
-                        CoroutineScope(Dispatchers.Main).launch {
-                            Toast.makeText(ctx, "Permesso USB negato o dispositivo non trovato. Tentativi esauriti.", Toast.LENGTH_LONG).show()
-                        }
-                        Log.w(TAG, "Permesso negato: $granted, Device: ${device?.deviceName ?: "null"}, Tentativi: $currentAttempts")
-                        retryCounts.remove(deviceKey)
-                        retryTimestamps.remove(deviceKey)
-                    }
+                    Log.w(TAG, "Permesso negato per il dispositivo.")
+                    // NON aggiungere "retry" o Toast di errore che si ripetono qui
                 }
             }
 

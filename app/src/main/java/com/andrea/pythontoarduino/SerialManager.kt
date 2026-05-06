@@ -121,7 +121,7 @@ object SerialManager {
         }
 
         // Piccola pausa per stabilizzare la connessione
-        Thread.sleep(100)
+        Thread.sleep(500)
     }
 
     private fun setupReadCallback() {

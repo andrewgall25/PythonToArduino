@@ -76,7 +76,7 @@ fun AppTopBar(
             .background(
                 Brush.horizontalGradient(
                     colors = listOf(
-                        Color(0xFF2A4D8F),
+                        Color(0xFF162F72),
                         Color(0xFF2A4D6E),
                         Color(0xFF2A4D6C)
                     )

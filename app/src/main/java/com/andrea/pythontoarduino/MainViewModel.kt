@@ -22,6 +22,7 @@ import android.content.Intent
 import com.chaquo.python.PyException
 import com.chaquo.python.PyObject
 import kotlinx.coroutines.isActive
+import org.json.JSONObject
 import kotlin.jvm.java
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -30,12 +31,43 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var pythonOutputStream: PythonOutputStream? = null
     private var pythonExecutionJob: Job? = null
 
+    // Nel MainViewModel.kt, modifica la gestione dell'output
+    // Aggiungi una variabile di classe nel ViewModel per accumulare i pezzi di testo
+    // 1. Aggiungi questa variabile in cima alla classe MainViewModel
+    private var arduinoLineBuffer = ""
+
+    // 2. Modifica il callback nel init o dove inizializzi outputStream
     private val outputStream = PythonOutputStream { text ->
         viewModelScope.launch(Dispatchers.Main) {
-            _output.value = (_output.value ?: "") + text
-            Log.d("MainViewModel", "Output ricevuto: '$text'")
+            // Accumuliamo il testo che arriva (sia da Python che da Arduino)
+            arduinoLineBuffer += text
+
+            // Se il buffer contiene un carattere di "a capo"
+            if (arduinoLineBuffer.contains("\n")) {
+                val lines = arduinoLineBuffer.split("\n")
+
+                // Processiamo tutte le righe complete (tranne l'ultima che potrebbe essere incompleta)
+                for (i in 0 until lines.size - 1) {
+                    val completeLine = lines[i].trim()
+                    if (completeLine.isNotEmpty()) {
+
+                        // --- LOGICA DI FILTRO ---
+                        if (completeLine.startsWith("SET:")) {
+                            // Invia il comando ad Arduino ma NON stamparlo nella UI (per pulizia)
+                            sendToSerial(completeLine)
+                        } else {
+                            // Stampa nella UI solo i messaggi veri (es. "LED 13 ACCESO")
+                            _output.value = (_output.value ?: "") + completeLine + "\n"
+                        }
+                    }
+                }
+                // Teniamo l'ultimo pezzo (incompleto) nel buffer
+                arduinoLineBuffer = lines.last()
+            }
         }
     }
+
+
 
     private val inputStream = PythonInputStream()
 
@@ -85,6 +117,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         initStreams()
         setupSerialListener()
         startOptimizedSerialStatusMonitoring()
+        // Collega i messaggi che arrivano DA Arduino alla console dell'app
+        SerialManager.setReadCallback { data ->
+            _output.value = (_output.value ?: "") + "\nArduino: $data"
+        }
         performInitialUsbCheck()
         viewModelScope.launch(Dispatchers.IO) {
             outputStream.readAndProcessOutput()
@@ -161,7 +197,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     if (isConnected != lastConnectionState) {
                         withContext(Dispatchers.Main) {
                             _isUsbReady.value = isConnected
-                            _usbStatus.value = if (isConnected) "Arduino connesso" else "Arduino non connesso"
+                            _usbStatus.value = if (isConnected) "Arduino connected" else "Arduino disconnected"
 
                             // Solo log quando stato cambia
                             Log.d("MainViewModel", "USB status changed: $isConnected")
@@ -187,7 +223,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                 val isConnected = SerialManager.isConnected()
                 withContext(Dispatchers.Main) {
-                    _usbStatus.value = if (isConnected) "Arduino connesso" else "Arduino non connesso"
+                    _usbStatus.value = if (isConnected) "Arduino connected" else "Arduino disconnected"
                     _isUsbReady.value = isConnected
                     _showUsbStatusMessage.value = !isConnected
                     initialUsbMessageShown = true
@@ -199,20 +235,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun sendToSerial(data: String) {
-        if (!SerialManager.isSerialReady) {
-            Log.w("MainViewModel", "Arduino non connesso: impossibile inviare '$data'")
-            _output.value = (_output.value ?: "") + "\n[Errore] Arduino non connesso!"
-            return
-        }
-
-        Log.d("MainViewModel", "Inviando a Arduino: '$data'")
-        viewModelScope.launch(Dispatchers.IO) { // FIX: Usa IO dispatcher
+        // Invece di controllare isSerialReady (che potrebbe fluttuare),
+        // prova a inviare se SerialManager ha un riferimento al device
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 SerialManager.send(data)
             } catch (e: Exception) {
-                Log.e("MainViewModel", "Errore invio seriale: ${e.message}")
                 withContext(Dispatchers.Main) {
-                    _output.value = (_output.value ?: "") + "\n[Errore] Invio fallito: ${e.message}"
+                    _output.value = (_output.value ?: "") + "\n[Errore Seriale] ${e.message}"
                 }
             }
         }
@@ -224,17 +254,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun runPythonCode(code: String) {
         if (_isPythonRunning.value == true) return
+        val py = Python.getInstance()
+        val module = py.getModule("my_script")
+
+
+        val connectionChecker = {
+            SerialManager.isConnected()
+        }
+        // Inseriamo la lambda direttamente nel modulo Python
+        module.put("check_connection_bridge", connectionChecker)
+
+        // Diciamo a my_script di usare questo bridge
+        py.getModule("my_script").callAttr("set_connection_checker", connectionChecker)
+        // ----------------------------------------
+
         _isPythonRunning.value = true
         _output.value = "--- Starting Python execution ---\n"
-        pythonExecutionJob = viewModelScope.launch(Dispatchers.IO) {
+
+        viewModelScope.launch(Dispatchers.IO) {
             try {
-                val py = Python.getInstance()
-                val module = py.getModule("my_script")
-                module.callAttr("execute_user_code", code)
+                // 2. IMPORTANTE: Resetta il flag prima di partire
+                // Questo assicura che il vecchio loop (se esistente) muoia
+                module.callAttr("stop_execution")
+
+                // Usa una funzione che NON cattura l'output in una stringa,
+                // ma lo lancia e basta
+                module.callAttr("execute_live_code", code)
+
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    _output.value = (_output.value ?: "") + "\nError on Python execution: ${e.message}"
-                    Log.e("MainViewModel", "Error on runPythonCode: ${e.message}")
+                    _output.value = (_output.value ?: "") + "\nPython error: ${e.message}"
                 }
             } finally {
                 withContext(Dispatchers.Main) {
@@ -244,20 +293,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun cancelPythonExecution() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                Python.getInstance().getModule("sys").callAttr("exit")
-                Log.d("MainViewModel", "Python execution cancelled")
-            } catch (e: Exception) {
-                Log.e("MainViewModel", "Errore durante la cancellazione: ${e.message}")
-            } finally {
-                withContext(Dispatchers.Main) {
-                    _isPythonRunning.value = false
-                    _output.value = (_output.value ?: "") + "\nEsecuzione Python interrotta"
-                }
+    fun cancelPythonExecution() {viewModelScope.launch(Dispatchers.IO) {
+        try {
+            val py = Python.getInstance()
+            val module = py.getModule("my_script")
+
+            // 1. Diciamo a Python di fermare il ciclo is_running()
+            module.callAttr("stop_execution")
+
+            Log.d("MainViewModel", "Flag di esecuzione Python impostato a False")
+
+            // 2. Opzionale: Interrompiamo la coroutine Kotlin per sicurezza
+            // Se hai salvato il job quando hai lanciato runPythonCode
+            // pythonJob?.cancel()
+
+        } catch (e: Exception) {
+            Log.e("MainViewModel", "Errore durante lo stop: ${e.message}")
+        } finally {
+            withContext(Dispatchers.Main) {
+                _isPythonRunning.value = false
+                _output.value = (_output.value ?: "") + "\n--- Python execution stopped by user ---\n"
             }
         }
+    }
     }
 
     // FIX: Check USB con throttling per evitare spam
@@ -271,7 +329,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         if (SerialManager.isConnected()) {
             Log.d("MainViewModel", "Connessione già attiva, salto checkUsbDevice")
-            _usbStatus.value = "Arduino connesso"
+            _usbStatus.value = "Arduino connected"
             _isUsbReady.value = true
             _showUsbStatusMessage.value = false
             return
@@ -484,10 +542,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     Log.e("MainViewModel", "Risultato di execute_user_code è null")
                     return@withContext Pair(null, "Errore: Risultato di execute_user_code è null")
                 }
-                val hexValuePy = resultPy.get(0, PyObject::class.java)
-                val outputPy = resultPy.get(1, PyObject::class.java)
-                val hexValue = hexValuePy?.toString()?.takeIf { it != "None" && it.isNotBlank() }
-                val output = outputPy?.toString() ?: ""
+                val resultList = resultPy.asList()
+
+                val hexValuePy = resultList[0]
+                val outputPy = resultList[1]
+                val hexValue = hexValuePy?.toString()?.takeIf { it != "None" }
+                val output = outputPy?.toString().orEmpty()
                 Log.d("MainViewModel", "Risultato Python: hex=$hexValue, output=$output")
                 Pair(hexValue, output)
             } catch (e: PyException) {
@@ -508,16 +568,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun PyObject.get(key: Int, java: Class<PyObject>) {}
-
-    private fun transpilePythonToCpp(pythonCode: String): String {
-        val escapedPython = pythonCode.replace("\"", "\\\"")  // Escape double quotes for C++
-        return """
-            #include <Arduino.h>
-            void setup() { Serial.begin(9600); }
-            void loop() { Serial.println("Python code stub: $escapedPython"); delay(1000); }
-        """.trimIndent()
-    }
 
     fun SerialManager.flashHex(hex: String) {
         // Stub temporaneo: logga l'HEX invece di flashare
@@ -530,19 +580,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         _isPythonRunning.value = true
-        _output.value = "--- Avvio compilazione Python → Arduino ---\n"
+        _output.value = "--- Building Arduino ---\n"
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val cppCode = transpilePythonToCpp(pythonCode)
-                Log.d("MainViewModel", "C++ generato:\n$cppCode")
-                val escapedCppCode = cppCode.replace("'''", "''\\'")  // Escape triple quotes
-
                 // Fix: No indents, use \n for lines
-                val pythonCodeToRun = "from build import send_cpp_to_server\n" +
-                        "hex = send_cpp_to_server(r'''$escapedCppCode''')"
+                val escaped = pythonCode.replace("'''", "''\\'")
+                val script = "from build import send_python_to_server\n" +
+                        "hex = send_python_to_server(r'''$escaped''')\n" +
+                        "print(hex)\n"
 
-                Log.d("MainViewModel", "Codice Python generato:\n$pythonCodeToRun")
-                val (hexCode, pythonOutput) = runPythonCodeBlocking(pythonCodeToRun)
+
+                Log.d("MainViewModel", "Codice Python generato:\n$script")
+                val result = runPythonCodeBlocking(script)
+                val hexCode = result.first
+                val pythonOutput = result.second
+                Log.d("FULL_OUTPUT", pythonOutput)
                 withContext(Dispatchers.Main) {
                     _output.value = (_output.value ?: "") + "\n$pythonOutput"
                     if (hexCode.isNullOrEmpty()) {

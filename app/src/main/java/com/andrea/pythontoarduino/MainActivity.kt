@@ -20,6 +20,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,6 +36,8 @@ class MainActivity : ComponentActivity() {
     private var usbReceiver: UsbBroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Gestisce la transizione dal tema Splash al tema dell'app
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
         if (!Python.isStarted()) {
@@ -206,6 +209,12 @@ class MainActivity : ComponentActivity() {
         CoroutineScope(Dispatchers.Main).launch {
             Toast.makeText(this@MainActivity, "Richiesta permessi per Arduino...", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()    // Invece di ricreare il PendingIntent qui (che causava l'errore),
+        // usiamo la funzione che abbiamo già scritto per controllare i dispositivi.
+        checkExistingUsbDevices()
     }
 
     override fun onDestroy() {
