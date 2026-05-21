@@ -57,7 +57,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             sendToSerial(completeLine)
                         } else {
                             // Stampa nella UI solo i messaggi veri (es. "LED 13 ACCESO")
-                            _output.value = (_output.value ?: "") + completeLine + "\n"
+                            appendOutput(completeLine)
                         }
                     }
                 }
@@ -119,7 +119,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         startOptimizedSerialStatusMonitoring()
         // Collega i messaggi che arrivano DA Arduino alla console dell'app
         SerialManager.setReadCallback { data ->
-            _output.value = (_output.value ?: "") + "\nArduino: $data"
+            appendOutput("Arduino: $data")
         }
         performInitialUsbCheck()
         viewModelScope.launch(Dispatchers.IO) {
@@ -150,6 +150,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun clearOutput() {
         _output.value = ""
+    }
+
+    fun copyOutput(): String {
+        return _output.value ?: ""
+    }
+
+    private var lastOutputTimestamp: String = ""
+
+    private fun timestamp(): String {
+        val now = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+        return now
+    }
+
+    private fun appendTimestampIfNeeded() {
+        val ts = timestamp()
+        if (ts != lastOutputTimestamp) {
+            lastOutputTimestamp = ts
+            _output.value = (_output.value ?: "") + "[$ts]\n"
+        }
+    }
+
+    private fun appendOutput(text: String) {
+        appendTimestampIfNeeded()
+        _output.value = (_output.value ?: "") + text + "\n"
     }
 
     // ========================= GESTIONE ULTIMO FILE =========================
@@ -242,7 +266,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 SerialManager.send(data)
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    _output.value = (_output.value ?: "") + "\n[Errore Seriale] ${e.message}"
+                    appendOutput("[Errore Seriale] ${e.message}")
                 }
             }
         }
@@ -269,7 +293,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         // ----------------------------------------
 
         _isPythonRunning.value = true
-        _output.value = "--- Starting Python execution ---\n"
+        lastOutputTimestamp = ""
+        appendOutput("--- Starting Python execution ---")
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -283,7 +308,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    _output.value = (_output.value ?: "") + "\nPython error: ${e.message}"
+                    appendOutput("Python error: ${e.message}")
                 }
             } finally {
                 withContext(Dispatchers.Main) {
@@ -312,7 +337,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         } finally {
             withContext(Dispatchers.Main) {
                 _isPythonRunning.value = false
-                _output.value = (_output.value ?: "") + "\n--- Python execution stopped by user ---\n"
+                appendOutput("--- Python execution stopped by user ---")
             }
         }
     }
@@ -472,7 +497,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun sendConsoleInput(input: String) {
         viewModelScope.launch(Dispatchers.IO) {
             withContext(Dispatchers.Main) {
-                _output.value = (_output.value ?: "") + "\n> " + input
+                appendOutput("> $input")
                 _consoleInput.value = ""
             }
             pythonInputStream?.write(input + "\n")
@@ -580,7 +605,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
         _isPythonRunning.value = true
-        _output.value = "--- Building Arduino ---\n"
+        lastOutputTimestamp = ""
+        appendOutput("--- Building Arduino ---")
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 // Fix: No indents, use \n for lines
@@ -596,33 +622,33 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val pythonOutput = result.second
                 Log.d("FULL_OUTPUT", pythonOutput)
                 withContext(Dispatchers.Main) {
-                    _output.value = (_output.value ?: "") + "\n$pythonOutput"
+                    appendOutput(pythonOutput)
                     if (hexCode.isNullOrEmpty()) {
                         Log.e("MainViewModel", "Nessun HEX ricevuto: hexCode è null o vuoto")
-                        _output.value = (_output.value ?: "") + "\nError: no HEX received from server."
+                        appendOutput("Error: no HEX received from server.")
                         _isPythonRunning.value = false
                         return@withContext
                     }
                     if (!hexCode.startsWith(":")) {
                         Log.e("MainViewModel", "HEX non valido: non inizia con ':'")
-                        _output.value = (_output.value ?: "") + "\nError: HEX not valid received from server."
+                        appendOutput("Error: HEX not valid received from server.")
                         _isPythonRunning.value = false
                         return@withContext
                     }
                     Log.d("MainViewModel", "HEX valido ricevuto: ${hexCode.take(100)}...")
-                    _output.value = (_output.value ?: "") + "\n--- HEX received ---\n$hexCode\n"
+                    appendOutput("--- HEX received ---\n$hexCode")
                     try {
                         SerialManager.flashHex(hexCode)
-                        _output.value = (_output.value ?: "") + "\n--- Flash completed successfully ---"
+                        appendOutput("--- Flash completed successfully ---")
                     } catch (e: Exception) {
                         Log.e("MainViewModel", "Errore flash Arduino: ${e.message}")
-                        _output.value = (_output.value ?: "") + "\nError on Arduino flash: ${e.message}"
+                        appendOutput("Error on Arduino flash: ${e.message}")
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Log.e("MainViewModel", "Errore compilazione: ${e.message}")
-                    _output.value = (_output.value ?: "") + "\nError on compilation: ${e.message}"
+                    appendOutput("Error on compilation: ${e.message}")
                 }
             } finally {
                 withContext(Dispatchers.Main) {

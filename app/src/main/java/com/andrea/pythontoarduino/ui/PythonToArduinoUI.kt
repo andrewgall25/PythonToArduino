@@ -16,7 +16,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -315,6 +314,8 @@ fun PythonToArduinoUI(
     onFileNameChange: (String) -> Unit,
     onSaveFile: (String, String) -> Unit,
     onCompileAndFlash: (String) -> Unit = { _ -> }, // 👈 Aggiungi con default vuoto
+    onClearOutput: () -> Unit = {},
+    onCopyOutput: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val persistentWebView = remember { WebView(context) }
@@ -477,13 +478,17 @@ fun PythonToArduinoUI(
                     0 -> CodeEditorSection(
                         webView = persistentWebView,
                         onCodeChange = onCodeChange,
-                        jsBridge = jsBridge, // 👈 aggiungi questo
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(top = 0.dp)
-                            .alpha(editorAlpha),
+                        jsBridge = jsBridge,
+                        modifier = Modifier.fillMaxSize().alpha(editorAlpha),
                         editorReady = editorReady,
                         textChangeSignal = textChangeSignal,
+                        pythonCode = pythonCode,
+                        isPythonRunning = isPythonRunning,
+                        isUsbChecking = isUsbChecking,
+                        onCheckUsb = onCheckUsb,
+                        onRunPython = onRunPython,
+                        onCancelPythonExecution = onCancelPythonExecution,
+                        onCompileAndFlash = onCompileAndFlash,
                     )
 
                     1 -> ConsoleSection(
@@ -491,7 +496,11 @@ fun PythonToArduinoUI(
                         consoleInput = consoleInput,
                         onConsoleInputChange = onConsoleInputChange,
                         onSendConsoleInput = onSendConsoleInput,
-                        modifier = Modifier.fillMaxSize()
+                        onClearOutput = onClearOutput,
+                        onCopyOutput = onCopyOutput,
+                        modifier = Modifier.fillMaxSize(),
+                        isPythonRunning = isPythonRunning,
+                        onCancelPythonExecution = onCancelPythonExecution,
                     )
 
                     2 -> DebugInfoSection(
@@ -500,25 +509,6 @@ fun PythonToArduinoUI(
                         isUsbChecking = isUsbChecking,
                         serialData = serialData,
                         modifier = Modifier.fillMaxSize().padding(16.dp)
-                    )
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .padding(horizontal = 0.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.Bottom,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    ActionButtons(
-                        pythonCode = pythonCode,
-                        isPythonRunning = isPythonRunning,
-                        isUsbChecking = isUsbChecking,
-                        onCheckUsb = onCheckUsb,
-                        onRunPython = onRunPython,
-                        onCancelPythonExecution = onCancelPythonExecution,
-                        onCompileAndFlash = onCompileAndFlash
                     )
                 }
             }

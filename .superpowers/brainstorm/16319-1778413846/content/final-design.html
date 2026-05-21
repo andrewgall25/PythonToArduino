@@ -1,0 +1,64 @@
+<h2>Final Console Design</h2>
+<p class="subtitle">GitHub Dark Glow palette with JetBrainsMono, icon toolbar, and batch timestamps</p>
+
+<div class="mockup">
+  <div class="mockup-header">Console Section — Redesigned</div>
+  <div class="mockup-body" style="background: #0d1117; padding: 16px; border-radius: 8px;">
+
+    <!-- Header with green dot, title, and icon toolbar -->
+    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #21262d; padding-bottom: 12px; margin-bottom: 12px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="width: 10px; height: 10px; border-radius: 50%; background: #238636; box-shadow: 0 0 6px #23863655; display: inline-block;"></span>
+        <span style="color: #e6edf3; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; letter-spacing: 0.5px;">Console</span>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <span style="color: #8b949e; font-size: 18px; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#e6edf3'" onmouseout="this.style.color='#8b949e'" title="Copy all">&#128203;</span>
+        <span style="color: #8b949e; font-size: 18px; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#f85149'" onmouseout="this.style.color='#8b949e'" title="Clear console">&#128465;</span>
+      </div>
+    </div>
+
+    <!-- Console output -->
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 2; color: #8b949e;">
+      <!-- Batch 1 -->
+      <div style="color: #484f58; font-size: 10px; margin-bottom: 2px; letter-spacing: 0.3px;">14:30</div>
+      <div style="color: #ff7b72;">&gt; import serial</div>
+      <div style="color: #e6edf3;">&gt; Serial port opened on /dev/ttyUSB0</div>
+      <div style="color: #6a9955;">Compiled successfully</div>
+
+      <div style="height: 8px;"></div>
+
+      <!-- Batch 2 -->
+      <div style="color: #484f58; font-size: 10px; margin-bottom: 2px; letter-spacing: 0.3px;">14:32</div>
+      <div style="color: #a5d6ff;">Arduino: Ready</div>
+      <div style="color: #a5d6ff;">Arduino: Sensor = 42</div>
+      <div style="color: #d2a8ff;">LED ON</div>
+
+      <div style="height: 8px;"></div>
+
+      <!-- Batch 3 (just now) -->
+      <div style="color: #484f58; font-size: 10px; margin-bottom: 2px; letter-spacing: 0.3px;">14:35</div>
+      <div style="color: #e6edf3;">&gt; turn(90)</div>
+      <div style="color: #a5d6ff;">Arduino: Turning 90&deg;</div>
+    </div>
+
+    <!-- Input area -->
+    <div style="margin-top: 16px; background: #161b22; border-radius: 14px; border: 1px solid #30363d; display: flex; align-items: center; padding: 8px 12px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#238636'" onmouseout="this.style.borderColor='#30363d'">
+      <span style="color: #484f58; font-family: 'JetBrains Mono', monospace; font-size: 12px; flex: 1;">Send a command</span>
+      <div style="width: 34px; height: 34px; border-radius: 50%; background: #238636; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 8px #23863644; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+        <span style="color: #fff; font-size: 16px;">&#8594;</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Design Summary</h3>
+  <ul style="color: #8b949e; font-size: 14px; line-height: 1.8;">
+    <li><strong>Palette:</strong> GitHub Dark Glow — #0d1117 bg, #161b22 input, #30363d borders</li>
+    <li><strong>Font:</strong> JetBrainsMono (moved from assets to res/font for Compose)</li>
+    <li><strong>Timestamps:</strong> HH:mm labels between message batches, #484f58 subtle color</li>
+    <li><strong>Header:</strong> Green dot + title + icon toolbar (copy &amp; clear/trash)</li>
+    <li><strong>Input:</strong> Pill-shaped, green glow on hover, green send button</li>
+    <li><strong>Message colors:</strong> Color-coded by type — commands, arduino, errors</li>
+  </ul>
+</div>

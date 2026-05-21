@@ -8,8 +8,8 @@ import android.webkit.ValueCallback
 import android.webkit.WebView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -37,23 +37,26 @@ import com.andrea.pythontoarduino.ui.JSBridge
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun CodeEditorSection(
-    webView: WebView, // L'istanza persistente viene passata come parametro
+    webView: WebView,
     onCodeChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     editorReady: Boolean,
     textChangeSignal: Int,
-    jsBridge: JSBridge // meglio passarlo come parametro, così non è nullo
+    jsBridge: JSBridge,
+    pythonCode: String,
+    isPythonRunning: Boolean,
+    isUsbChecking: Boolean,
+    onCheckUsb: () -> Unit,
+    onRunPython: (String) -> Unit,
+    onCancelPythonExecution: () -> Unit,
+    onCompileAndFlash: (String) -> Unit,
 ) {
     val currentOnCodeChange = rememberUpdatedState(onCodeChange)
 
     val context = LocalContext.current
 
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .heightIn(min = 400.dp)
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
         AndroidView(
             factory = {
                 webView.apply {
@@ -80,6 +83,17 @@ fun CodeEditorSection(
             },
             modifier = Modifier.fillMaxSize(),
             update = { /* nessun aggiornamento necessario qui */ }
+        )
+
+        ActionButtons(
+            pythonCode = pythonCode,
+            isPythonRunning = isPythonRunning,
+            isUsbChecking = isUsbChecking,
+            onCheckUsb = onCheckUsb,
+            onRunPython = onRunPython,
+            onCancelPythonExecution = onCancelPythonExecution,
+            onCompileAndFlash = onCompileAndFlash,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
         )
     }
 

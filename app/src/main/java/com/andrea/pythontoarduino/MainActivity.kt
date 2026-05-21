@@ -4,6 +4,8 @@ import android.app.AlertDialog
 import android.app.Application
 import android.os.Build
 import android.app.PendingIntent
+import android.content.ClipboardManager
+import android.content.ClipData
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -111,7 +113,14 @@ class MainActivity : ComponentActivity() {
                             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                         }
                     },
-                    onCompileAndFlash = { code -> viewModel.compileAndFlashArduino(code) } // 👈 Aggiungi
+                    onCompileAndFlash = { code -> viewModel.compileAndFlashArduino(code) },
+                    onClearOutput = { viewModel.clearOutput() },
+                    onCopyOutput = {
+                        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("Console Output", viewModel.copyOutput())
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(this@MainActivity, "Console copied to clipboard", Toast.LENGTH_SHORT).show()
+                    }
 
                 )
             }

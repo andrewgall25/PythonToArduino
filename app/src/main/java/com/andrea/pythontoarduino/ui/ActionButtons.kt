@@ -8,14 +8,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -70,174 +68,167 @@ fun ActionButtons(
     onCompileAndFlash: (String) -> Unit, // NUOVO PARAMETRO
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .navigationBarsPadding()
-            .padding(16.dp),
-        contentAlignment = Alignment.BottomEnd
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // "Controlla USB" Button
-            val usbButtonBackground = if (isUsbChecking || isPythonRunning) {
-                Modifier.background(Color.Gray.copy(alpha = 0.6f))
-            } else {
-                Modifier.background(Brush.horizontalGradient(listOf(Color(0xFF86D957), Color(0xFF249150))))
-            }
+        // "Controlla USB" Button
+        val usbButtonBackground = if (isUsbChecking || isPythonRunning) {
+            Modifier.background(Color.Gray.copy(alpha = 0.6f))
+        } else {
+            Modifier.background(Brush.horizontalGradient(listOf(Color(0xFF86D957), Color(0xFF249150))))
+        }
 
-            Surface(
-                modifier = Modifier
-                    .size(50.dp)
-                    .clickable(enabled = !isUsbChecking && !isPythonRunning, indication = null, interactionSource = remember { MutableInteractionSource() }) {
-                        onCheckUsb()
-                    }
-                    .shadow(if (isUsbChecking || isPythonRunning) 2.dp else 8.dp, RoundedCornerShape(20.dp))
-                    .clip(RoundedCornerShape(20.dp))
-                    .then(usbButtonBackground)
-                    .animateContentSize(),
-                color = Color.Transparent
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    if (isUsbChecking) {
-                        val rotation = remember { Animatable(0f) }
-                        LaunchedEffect(isUsbChecking) {
-                            if (isUsbChecking) {
-                                rotation.animateTo(
-                                    targetValue = 360f * 3,
-                                    animationSpec = tween(durationMillis = 3000, easing = LinearEasing)
-                                )
-                            } else {
-                                rotation.snapTo(0f)
-                            }
-                        }
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp).rotate(rotation.value),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Usb,
-                            contentDescription = "Check USB",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
+        Surface(
+            modifier = Modifier
+                .size(50.dp)
+                .clickable(enabled = !isUsbChecking && !isPythonRunning, indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                    onCheckUsb()
                 }
-            }
-
-            // "Compile & Flash" Button
-            val compileFlashButtonBackground = if (isUsbChecking || isPythonRunning || pythonCode.isBlank()) {
-                Modifier.background(Color.Gray.copy(alpha = 0.6f))
-            } else {
-                Modifier.background(Brush.horizontalGradient(listOf(Color(0xFFFFA726), Color(0xFFF57C00))))
-            }
-
-            Surface(
-                modifier = Modifier
-                    .size(50.dp)
-                    .clickable(
-                        enabled = !isUsbChecking && !isPythonRunning && pythonCode.isNotBlank(),
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) {
-                        onCompileAndFlash(pythonCode)
-                    }
-                    .shadow(if (isUsbChecking || isPythonRunning || pythonCode.isBlank()) 2.dp else 8.dp, RoundedCornerShape(20.dp))
-                    .clip(RoundedCornerShape(20.dp))
-                    .then(compileFlashButtonBackground)
-                    .animateContentSize(),
-                color = Color.Transparent
+                .shadow(if (isUsbChecking || isPythonRunning) 2.dp else 8.dp, RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(20.dp))
+                .then(usbButtonBackground)
+                .animateContentSize(),
+            color = Color.Transparent
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxSize()
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxSize()
-                ) {
+                if (isUsbChecking) {
+                    val rotation = remember { Animatable(0f) }
+                    LaunchedEffect(isUsbChecking) {
+                        if (isUsbChecking) {
+                            rotation.animateTo(
+                                targetValue = 360f * 3,
+                                animationSpec = tween(durationMillis = 3000, easing = LinearEasing)
+                            )
+                        } else {
+                            rotation.snapTo(0f)
+                        }
+                    }
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp).rotate(rotation.value),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
                     Icon(
-                        imageVector = Icons.Default.Build,
-                        contentDescription = "Compile & Flash",
+                        imageVector = Icons.Default.Usb,
+                        contentDescription = "Check USB",
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )
                 }
             }
+        }
 
-            // "Play/Stop" Button
-            val playStopButtonBackground = if (isUsbChecking) {
-                Modifier.background(Color.Gray.copy(alpha = 0.6f))
-            } else if (isPythonRunning) {
-                Modifier.background(Brush.horizontalGradient(listOf(Color(0xFFEF5350), Color(0xFFD32F2F))))
-            } else {
-                Modifier.background(Brush.horizontalGradient(listOf(Color(0xFF86BBD8), Color(0xFF346295))))
-            }
+        // "Compile & Flash" Button
+        val compileFlashButtonBackground = if (isUsbChecking || isPythonRunning || pythonCode.isBlank()) {
+            Modifier.background(Color.Gray.copy(alpha = 0.6f))
+        } else {
+            Modifier.background(Brush.horizontalGradient(listOf(Color(0xFFFFA726), Color(0xFFF57C00))))
+        }
 
-            Surface(
-                modifier = Modifier
-                    .width(100.dp)
-                    .height(50.dp)
-                    .clickable(
-                        enabled = !isUsbChecking && (if (isPythonRunning) true else pythonCode.isNotBlank()),
-                        indication = null,
-                        interactionSource = remember { MutableInteractionSource() }
-                    ) {
-                        if (isPythonRunning) {
-                            onCancelPythonExecution()
-                        } else {
-                            onRunPython(pythonCode)
-                        }
-                    }
-                    .shadow(
-                        if (isUsbChecking || (isPythonRunning || !pythonCode.isNotBlank())) 2.dp else 12.dp,
-                        RoundedCornerShape(20.dp)
-                    )
-                    .clip(RoundedCornerShape(20.dp))
-                    .then(playStopButtonBackground)
-                    .animateContentSize()
-                    .padding(horizontal = 16.dp),
-                color = Color.Transparent
+        Surface(
+            modifier = Modifier
+                .size(50.dp)
+                .clickable(
+                    enabled = !isUsbChecking && !isPythonRunning && pythonCode.isNotBlank(),
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) {
+                    onCompileAndFlash(pythonCode)
+                }
+                .shadow(if (isUsbChecking || isPythonRunning || pythonCode.isBlank()) 2.dp else 8.dp, RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(20.dp))
+                .then(compileFlashButtonBackground)
+                .animateContentSize(),
+            color = Color.Transparent
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxSize()
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxSize()
+                Icon(
+                    imageVector = Icons.Default.Build,
+                    contentDescription = "Compile & Flash",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+
+        // "Play/Stop" Button
+        val playStopButtonBackground = if (isUsbChecking) {
+            Modifier.background(Color.Gray.copy(alpha = 0.6f))
+        } else if (isPythonRunning) {
+            Modifier.background(Brush.horizontalGradient(listOf(Color(0xFFEF5350), Color(0xFFD32F2F))))
+        } else {
+            Modifier.background(Brush.horizontalGradient(listOf(Color(0xFF86BBD8), Color(0xFF346295))))
+        }
+
+        Surface(
+            modifier = Modifier
+                .width(100.dp)
+                .height(50.dp)
+                .clickable(
+                    enabled = !isUsbChecking && (if (isPythonRunning) true else pythonCode.isNotBlank()),
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
                 ) {
                     if (isPythonRunning) {
-                        Icon(
-                            imageVector = Icons.Default.Stop,
-                            contentDescription = "Stop Execution",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Stop",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = CreatoDisplay2
-                        )
+                        onCancelPythonExecution()
                     } else {
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Execute",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Run",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = CreatoDisplay2
-                        )
+                        onRunPython(pythonCode)
                     }
+                }
+                .shadow(
+                    if (isUsbChecking || (isPythonRunning || !pythonCode.isNotBlank())) 2.dp else 12.dp,
+                    RoundedCornerShape(20.dp)
+                )
+                .clip(RoundedCornerShape(20.dp))
+                .then(playStopButtonBackground)
+                .animateContentSize()
+                .padding(horizontal = 16.dp),
+            color = Color.Transparent
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (isPythonRunning) {
+                    Icon(
+                        imageVector = Icons.Default.Stop,
+                        contentDescription = "Stop Execution",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Stop",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = CreatoDisplay2
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Execute",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Run",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = CreatoDisplay2
+                    )
                 }
             }
         }
