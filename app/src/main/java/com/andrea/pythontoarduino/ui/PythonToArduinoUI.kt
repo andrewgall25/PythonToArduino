@@ -16,15 +16,26 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -42,8 +53,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.andrea.pythontoarduino.server.AssetServer
+import com.andrea.pythontoarduino.ui.theme.HtmlColors
+import com.andrea.pythontoarduino.ui.theme.JetBrainsMono
+import com.andrea.pythontoarduino.ui.theme.Manrope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -63,17 +79,10 @@ import android.widget.PopupMenu
 import android.widget.PopupWindow
 import android.widget.TextView
 import androidx.compose.ui.graphics.toArgb
-import android.util.TypedValue // Import necessario per TypedValue
-import androidx.lifecycle.viewmodel.compose.viewModel
+import android.util.TypedValue
 
 /**
  * JSBridge class to facilitate communication between JavaScript in the WebView and Kotlin.
- * It provides methods that JavaScript can call.
- * This class is now defined here to be part of the persistent scope for the WebView.
- *
- * @param onEditorReadyCallback A callback to notify Kotlin when Monaco Editor is fully initialized.
- * @param onTextChangedNotificationCallback A callback to notify Kotlin when the text in the editor changes.
- * @param onCursorPositionChangedCallback A callback to notify Kotlin when the cursor position changes.
  */
 class JSBridge(
     private val context: Context,
@@ -88,23 +97,17 @@ class JSBridge(
     fun setScrolling(value: Boolean) { isScrolling = value }
 
     @JavascriptInterface
-    fun onEditorReady() {
-        onEditorReadyCallback()
-    }
+    fun onEditorReady() { onEditorReadyCallback() }
 
     @JavascriptInterface
-    fun onTextChangedNotification() {
-        onTextChangedNotificationCallback()
-    }
+    fun onTextChangedNotification() { onTextChangedNotificationCallback() }
 
     @JavascriptInterface
     fun getClipboardText(): String {
         val clip = clipboardManager.primaryClip
         return if (clip != null && clip.itemCount > 0) {
             clip.getItemAt(0).coerceToText(context).toString()
-        } else {
-            ""
-        }
+        } else { "" }
     }
 
     @JavascriptInterface
@@ -134,76 +137,56 @@ class JSBridge(
 
     @SuppressLint("InflateParams")
     fun showEditorPopupAt(x: Float, y: Float) {
-        // Container verticale per le voci
         val popupView = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(12, 12, 12, 12)
-
-            // 1. Il GradientDrawable gestisce lo sfondo e gli angoli
             background = GradientDrawable().apply {
-                // Riferimento esplicito a android.graphics.Color
-                setColor(android.graphics.Color.parseColor("#F9F9F9")) // colore di sfondo leggero
-                cornerRadius = 16f // angoli arrotondati
-                setStroke(1, android.graphics.Color.parseColor("#CCCCCC")) // bordo sottile
+                setColor(android.graphics.Color.parseColor("#F9F9F9"))
+                cornerRadius = 16f
+                setStroke(1, android.graphics.Color.parseColor("#CCCCCC"))
             }
-
-            // L'ELEVATION VA SULLA VIEW (LinearLayout)
-            elevation = 8f // Aggiunge l'ombra morbida (richiede API 21+)
+            elevation = 8f
         }
 
-        // Creiamo il popup (DEVE ESSERE DEFINITO PRIMA DI ESSERE USATO)
         val popupWindow = PopupWindow(
             popupView,
             WindowManager.LayoutParams.WRAP_CONTENT,
             WindowManager.LayoutParams.WRAP_CONTENT,
             true
         ).apply {
-            elevation = 12f // Elevazione aggiuntiva per la finestra stessa
+            elevation = 12f
             isOutsideTouchable = true
-            // Riferimento esplicito a android.graphics.Color.TRANSPARENT
             setBackgroundDrawable(ColorDrawable(android.graphics.Color.TRANSPARENT))
-            animationStyle = android.R.style.Animation_Dialog // animazione comparsa
+            animationStyle = android.R.style.Animation_Dialog
         }
 
-        // Funzione helper per aggiungere le voci con effetto al click
         fun addMenuItem(label: String, action: () -> Unit) {
-
-            // --- INIZIO CORREZIONE DEL CRASH ---
             val outValue = TypedValue()
             context.theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
             val selectableBackgroundResourceId = outValue.resourceId
-            // --- FINE CORREZIONE DEL CRASH ---
 
             val textView = TextView(context).apply {
                 text = label
                 textSize = 16f
                 setPadding(24, 18, 24, 18)
-                // Riferimento esplicito a android.graphics.Color
                 setTextColor(android.graphics.Color.parseColor("#333333"))
-
-                // 3. Ora usiamo l'ID della risorsa Drawable effettiva che abbiamo risolto
                 setBackgroundResource(selectableBackgroundResourceId)
-
                 setOnClickListener {
                     action()
-                    popupWindow.dismiss() // Ora 'popupWindow' è definito!
+                    popupWindow.dismiss()
                 }
             }
             popupView.addView(textView)
 
-            // Divider leggero tra le voci
             val divider = View(context).apply {
                 layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    1
-                ).apply { setMargins(0, 0, 0, 0) }
-                // Riferimento esplicito a android.graphics.Color
+                    LinearLayout.LayoutParams.MATCH_PARENT, 1
+                )
                 setBackgroundColor(android.graphics.Color.parseColor("#DDDDDD"))
             }
             popupView.addView(divider)
         }
 
-        // Aggiungi tutte le voci del menu
         addMenuItem("Copia") { copyToClipboard(webView, context) }
         addMenuItem("Incolla") { pasteFromClipboard(webView, context) }
         addMenuItem("Seleziona tutto") { webView.evaluateJavascript("editor.setSelection(editor.getModel().getFullModelRange());", null) }
@@ -221,7 +204,6 @@ class JSBridge(
         addMenuItem("Commenta riga") { webView.evaluateJavascript("editor.getAction('editor.action.commentLine').run();", null) }
         addMenuItem("Formatta codice") { webView.evaluateJavascript("editor.getAction('editor.action.formatDocument').run();", null) }
 
-        // Mostra il popup in posizione toccata
         popupWindow.showAtLocation(webView, Gravity.NO_GRAVITY, x.toInt(), y.toInt())
     }
 }
@@ -246,33 +228,22 @@ fun pasteFromClipboard(webView: WebView, context: Context) {
                 }
             })();
         """.trimIndent()
-
-        webView.post {
-            webView.evaluateJavascript(jsCode, null)
-        }
+        webView.post { webView.evaluateJavascript(jsCode, null) }
     }
 }
 
 fun copyToClipboard(webView: WebView, context: Context) {
     webView.evaluateJavascript("window.getCode();") { result ->
-        val code = try {
-            JSONArray("[$result]").getString(0)
-        } catch (e: Exception) {
-            ""
-        }
+        val code = try { JSONArray("[$result]").getString(0) } catch (e: Exception) { "" }
         if (code.isNotEmpty()) {
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val clip = ClipData.newPlainText("code", code)
-            clipboard.setPrimaryClip(clip)
+            clipboard.setPrimaryClip(ClipData.newPlainText("code", code))
         }
     }
 }
 
 fun clearEditor(webView: WebView) {
-    val jsCode = "window.setCode('');"
-    webView.post {
-        webView.evaluateJavascript(jsCode, null)
-    }
+    webView.post { webView.evaluateJavascript("window.setCode('');", null) }
 }
 
 private fun toJsString(text: String): String {
@@ -283,7 +254,7 @@ private fun toJsString(text: String): String {
                 '\\' -> append("\\\\")
                 '"' -> append("\\\"")
                 '\n' -> append("\\n")
-                '\r' -> {} // ignora carriage return
+                '\r' -> {}
                 '\t' -> append("\\t")
                 else -> append(char)
             }
@@ -313,7 +284,7 @@ fun PythonToArduinoUI(
     onCancelPythonExecution: () -> Unit,
     onFileNameChange: (String) -> Unit,
     onSaveFile: (String, String) -> Unit,
-    onCompileAndFlash: (String) -> Unit = { _ -> }, // 👈 Aggiungi con default vuoto
+    onCompileAndFlash: (String) -> Unit = { _ -> },
     onClearOutput: () -> Unit = {},
     onCopyOutput: () -> Unit = {}
 ) {
@@ -325,11 +296,10 @@ fun PythonToArduinoUI(
     var editorReady by remember { mutableStateOf(false) }
     var textChangeSignal by remember { mutableIntStateOf(0) }
     val codeAlreadySet = remember { mutableStateOf(false) }
-    var cursorPosition by remember { mutableStateOf(Pair(1, 1)) } // Stato per riga e colonna
+    var cursorPosition by remember { mutableStateOf(Pair(1, 1)) }
 
     val editorAlpha by animateFloatAsState(targetValue = if (editorReady) 1f else 0f)
 
-    // ✅ CREA jsBridge QUI, fuori dal DisposableEffect
     val jsBridge = remember {
         JSBridge(
             context,
@@ -338,11 +308,9 @@ fun PythonToArduinoUI(
             onTextChangedNotificationCallback = { textChangeSignal++ },
             onCursorPositionChangedCallback = { line, column ->
                 cursorPosition = Pair(line, column)
-                Log.d("CodeEditorSection", "Cursor position updated: Row $line, Col $column")
             }
         )
     }
-
 
     DisposableEffect(context) {
         var assetServer: AssetServer? = null
@@ -366,7 +334,6 @@ fun PythonToArduinoUI(
                     isVerticalScrollBarEnabled = false
                     isHorizontalScrollBarEnabled = false
                     overScrollMode = View.OVER_SCROLL_NEVER
-
 
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                         WebView.setWebContentsDebuggingEnabled(true)
@@ -409,7 +376,6 @@ fun PythonToArduinoUI(
 
     LaunchedEffect(textChangeSignal) {
         if (editorReady && textChangeSignal > 0) {
-            Log.d("CodeEditorSection", "Fetching code from WebView due to textChangeSignal.")
             persistentWebView.evaluateJavascript("window.getCode();", ValueCallback { result ->
                 val cleanedResult = try {
                     JSONArray("[$result]").getString(0)
@@ -418,7 +384,6 @@ fun PythonToArduinoUI(
                     ""
                 }
                 onCodeChange(cleanedResult)
-                Log.d("CodeEditorSection", "Code retrieved: ${cleanedResult.take(50)}...")
             })
         }
     }
@@ -427,12 +392,10 @@ fun PythonToArduinoUI(
         if (editorReady && !codeAlreadySet.value) {
             persistentWebView.evaluateJavascript("setCode(${toJsString(pythonCode)});", null)
             codeAlreadySet.value = true
-            Log.d("CodeEditorSection", "Codice iniziale impostato per la prima volta.")
         }
     }
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabs = listOf("CODE", "CONSOLE", "DEBUG")
 
     Scaffold(
         topBar = {
@@ -444,18 +407,23 @@ fun PythonToArduinoUI(
                     onPasteClick = { pasteFromClipboard(persistentWebView, context) },
                     onCopyClick = { copyToClipboard(persistentWebView, context) },
                     onClearClick = { clearEditor(persistentWebView) },
-                    cursorPosition = cursorPosition
+                    cursorPosition = cursorPosition,
+                    onCheckUsb = onCheckUsb,
+                    onCompileAndFlash = { onCompileAndFlash(pythonCode) }
                 )
-                AppTabRow(selectedTabIndex = selectedTabIndex, tabs = tabs) { index ->
-                    selectedTabIndex = index
-                }
             }
         },
+        bottomBar = {
+            BottomNavBar(selectedTabIndex = selectedTabIndex) { index ->
+                selectedTabIndex = index
+            }
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .imePadding()
                 .background(
                     Brush.linearGradient(
                         colors = listOf(Color(0xFF121921), Color(0xFF002B44)),
@@ -475,21 +443,69 @@ fun PythonToArduinoUI(
 
             Box(modifier = Modifier.weight(1f)) {
                 when (selectedTabIndex) {
-                    0 -> CodeEditorSection(
-                        webView = persistentWebView,
-                        onCodeChange = onCodeChange,
-                        jsBridge = jsBridge,
-                        modifier = Modifier.fillMaxSize().alpha(editorAlpha),
-                        editorReady = editorReady,
-                        textChangeSignal = textChangeSignal,
-                        pythonCode = pythonCode,
-                        isPythonRunning = isPythonRunning,
-                        isUsbChecking = isUsbChecking,
-                        onCheckUsb = onCheckUsb,
-                        onRunPython = onRunPython,
-                        onCancelPythonExecution = onCancelPythonExecution,
-                        onCompileAndFlash = onCompileAndFlash,
-                    )
+                    0 -> Box(modifier = Modifier.fillMaxSize()) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            // File name + cursor info bar
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(HtmlColors.SurfaceContainer)
+                                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                FileNameTextField(
+                                    fileName = fileName,
+                                    onFileNameChange = onFileNameChange,
+                                    modifier = Modifier.height(26.dp).weight(1f)
+                                )
+                                Text(
+                                    text = "Ln: ${cursorPosition.first}, Col: ${cursorPosition.second}  |  UTF-8",
+                                    color = HtmlColors.TextSecondary,
+                                    fontSize = 11.sp,
+                                    fontFamily = JetBrainsMono
+                                )
+                            }
+
+                            // Code editor (takes remaining space)
+                            CodeEditorSection(
+                                webView = persistentWebView,
+                                onCodeChange = onCodeChange,
+                                jsBridge = jsBridge,
+                                modifier = Modifier.weight(1f).alpha(editorAlpha),
+                                editorReady = editorReady,
+                                textChangeSignal = textChangeSignal,
+                                pythonCode = pythonCode,
+                                isPythonRunning = isPythonRunning,
+                                isUsbChecking = isUsbChecking,
+                                onCheckUsb = onCheckUsb,
+                                onRunPython = onRunPython,
+                                onCancelPythonExecution = onCancelPythonExecution,
+                                onCompileAndFlash = onCompileAndFlash,
+                            )
+                        }
+
+                        // FAB — Run/Stop
+                        FloatingActionButton(
+                            onClick = {
+                                if (isPythonRunning) onCancelPythonExecution()
+                                else onRunPython(pythonCode)
+                            },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(end = 24.dp, bottom = 16.dp)
+                                .size(56.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            containerColor = HtmlColors.Primary,
+                            contentColor = HtmlColors.OnPrimary
+                        ) {
+                            Icon(
+                                imageVector = if (isPythonRunning) Icons.Default.Stop else Icons.Default.PlayArrow,
+                                contentDescription = if (isPythonRunning) "Stop" else "Run",
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
 
                     1 -> ConsoleSection(
                         output = output,
@@ -508,7 +524,8 @@ fun PythonToArduinoUI(
                         isPythonRunning = isPythonRunning,
                         isUsbChecking = isUsbChecking,
                         serialData = serialData,
-                        modifier = Modifier.fillMaxSize().padding(16.dp)
+                        modifier = Modifier.fillMaxSize(),
+                        onCancelPythonExecution = onCancelPythonExecution,
                     )
                 }
             }
