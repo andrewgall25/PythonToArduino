@@ -19,6 +19,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
@@ -38,6 +39,7 @@ class MainActivity : ComponentActivity() {
     private var usbReceiver: UsbBroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         // Gestisce la transizione dal tema Splash al tema dell'app
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
