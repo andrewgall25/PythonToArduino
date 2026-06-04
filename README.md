@@ -133,7 +133,7 @@ void loop() {
 ### Build Android App
 1. Clone the repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/PythonToArduino.git
+   git clone https://github.com/andrewgall25/PythonToArduino.git
    ```
 2. Open the project in **Android Studio**.
 3. Let Gradle sync and download dependencies.
