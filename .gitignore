@@ -8,6 +8,10 @@
 /captures
 .externalNativeBuild
 .cxx
+.claude
+.superpowers
+stitch
+docs
 
 # Gradle
 .gradle/

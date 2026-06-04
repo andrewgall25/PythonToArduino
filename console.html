@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PythonToArduino - Console</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&amp;family=Manrope:wght@300;600;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "stop-red": "#ef5350",
+                        "on-background": "#dfe2eb",
+                        "on-primary-fixed-variant": "#005319",
+                        "surface-container-lowest": "#0a0e14",
+                        "on-primary": "#00390e",
+                        "surface-bright": "#353940",
+                        "syntax-green": "#6a9955",
+                        "on-secondary": "#112b6e",
+                        "on-surface": "#dfe2eb",
+                        "inverse-on-surface": "#2d3137",
+                        "surface-container": "#1c2026",
+                        "tertiary-fixed-dim": "#efc04b",
+                        "surface-container-highest": "#31353c",
+                        "border-subtle": "#21262d",
+                        "ocean-blue": "#002b44",
+                        "surface-dim": "#10141a",
+                        "inverse-surface": "#dfe2eb",
+                        "flash-orange": "#ffa726",
+                        "primary-fixed-dim": "#7bdb80",
+                        "primary-fixed": "#97f999",
+                        "syntax-blue": "#a5d6ff",
+                        "primary": "#7bdb80",
+                        "on-error": "#690005",
+                        "outline": "#899485",
+                        "on-tertiary": "#3f2e00",
+                        "on-primary-fixed": "#002106",
+                        "syntax-red": "#ff7b72",
+                        "background": "#10141a",
+                        "surface-tint": "#7bdb80",
+                        "run-blue": "#86bbd8",
+                        "outline-variant": "#3f4a3d",
+                        "on-secondary-fixed-variant": "#2c4386",
+                        "surface": "#10141a",
+                        "on-surface-variant": "#becaba",
+                        "on-tertiary-container": "#fffdff",
+                        "secondary-fixed": "#dce1ff",
+                        "secondary-fixed-dim": "#b5c4ff",
+                        "text-primary": "#e6edf3",
+                        "bg-card": "#161b22",
+                        "on-secondary-fixed": "#00164d",
+                        "surface-variant": "#31353c",
+                        "secondary": "#b5c4ff",
+                        "primary-container": "#238636",
+                        "border-primary": "#30363d",
+                        "syntax-orange": "#ce9178",
+                        "surface-container-high": "#262a31",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#2f4588",
+                        "tertiary-container": "#937000",
+                        "on-secondary-container": "#a1b6ff",
+                        "error-container": "#93000a",
+                        "on-primary-container": "#f9fff3",
+                        "text-dimmed": "#c4cad0",
+                        "tertiary-fixed": "#ffdf99",
+                        "inverse-primary": "#006e23",
+                        "tertiary": "#efc04b",
+                        "syntax-purple": "#d2a8ff",
+                        "on-tertiary-fixed-variant": "#5a4300",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-low": "#181c22",
+                        "on-tertiary-fixed": "#251a00",
+                        "text-secondary": "#8b949e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-md": "12px",
+                        "unit": "4px",
+                        "tabrow-height": "35px",
+                        "margin-lg": "16px",
+                        "gutter": "16px",
+                        "margin-sm": "8px",
+                        "topbar-height": "55px",
+                        "button-height": "50px"
+                    },
+                    "fontFamily": {
+                        "code-sm": ["JetBrains Mono"],
+                        "label-lg": ["Manrope"],
+                        "title-md": ["Manrope"],
+                        "body-md": ["JetBrains Mono"],
+                        "headline-sm": ["Manrope"],
+                        "timestamp": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "code-sm": ["11px", {"lineHeight": "14px", "fontWeight": "400"}],
+                        "label-lg": ["14px", {"lineHeight": "18px", "fontWeight": "600"}],
+                        "title-md": ["15px", {"lineHeight": "20px", "letterSpacing": "0.5px", "fontWeight": "600"}],
+                        "body-md": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "headline-sm": ["20px", {"lineHeight": "22px", "fontWeight": "800"}],
+                        "timestamp": ["10px", {"lineHeight": "12px", "letterSpacing": "0.3px", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background: linear-gradient(180deg, #121921 0%, #002B44 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            user-select: none;
+        }
+        .console-glow {
+            box-shadow: 0 0 20px rgba(123, 219, 128, 0.1);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 10px;
+        }
+        .cursor-blink {
+            animation: blink 1s infinite step-end;
+        }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col text-on-surface">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center h-topbar-height px-margin-lg w-full bg-surface">
+<div class="flex items-center gap-margin-sm">
+<span class="material-symbols-outlined text-primary">terminal</span>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary">PythonToArduino</h1>
+</div>
+<div class="flex items-center gap-margin-md">
+<button class="hover:bg-surface-variant p-2 rounded-full transition-colors active:scale-95 duration-150">
+<span class="material-symbols-outlined text-primary">settings</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 relative flex flex-col px-margin-lg pt-margin-sm pb-24 overflow-hidden">
+<!-- Terminal Container -->
+<div class="flex-1 flex flex-col bg-[#0d1117] border border-border-primary rounded-lg overflow-hidden console-glow">
+<!-- Terminal Header / Utilities -->
+<div class="flex justify-between items-center px-4 py-2 bg-surface-container border-b border-border-subtle">
+<div class="flex gap-2">
+<div class="w-3 h-3 rounded-full bg-stop-red opacity-50"></div>
+<div class="w-3 h-3 rounded-full bg-flash-orange opacity-50"></div>
+<div class="w-3 h-3 rounded-full bg-syntax-green opacity-50"></div>
+</div>
+<div class="flex items-center gap-margin-md">
+<button class="text-text-secondary hover:text-primary transition-colors flex items-center gap-1 group" title="Copy Output">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+<span class="font-label-lg text-label-lg opacity-0 group-hover:opacity-100 transition-opacity">COPY</span>
+</button>
+<button class="text-text-secondary hover:text-stop-red transition-colors flex items-center gap-1 group" title="Clear Console">
+<span class="material-symbols-outlined text-[18px]">delete_sweep</span>
+<span class="font-label-lg text-label-lg opacity-0 group-hover:opacity-100 transition-opacity">CLEAR</span>
+</button>
+</div>
+</div>
+<!-- Logged Output Area -->
+<div class="flex-1 p-4 overflow-y-auto custom-scrollbar font-body-md text-body-md" id="terminal-output">
+<!-- System Connection -->
+<div class="flex items-start gap-3 mb-2">
+<span class="font-timestamp text-timestamp text-text-secondary mt-[3px]">[10:45:02]</span>
+<span class="text-syntax-blue">SYSTEM: Initializing serial bridge...</span>
+</div>
+<!-- Connection Success -->
+<div class="flex items-start gap-3 mb-2">
+<span class="font-timestamp text-timestamp text-text-secondary mt-[3px]">[10:45:03]</span>
+<span class="text-syntax-green">Arduino: Connected to COM3 (Arduino Uno)</span>
+</div>
+<!-- Command Log -->
+<div class="flex items-start gap-3 mb-2">
+<span class="font-timestamp text-timestamp text-text-secondary mt-[3px]">[10:45:10]</span>
+<span class="text-syntax-red font-semibold">&gt; run main.py</span>
+</div>
+<!-- Syntax Highlighting/Code Output -->
+<div class="flex items-start gap-3 mb-2">
+<span class="font-timestamp text-timestamp text-text-secondary mt-[3px]">[10:45:11]</span>
+<span class="text-on-surface">Uploading bytecode to ATmega328P...</span>
+</div>
+<div class="flex items-start gap-3 mb-2">
+<span class="font-timestamp text-timestamp text-text-secondary mt-[3px]">[10:45:12]</span>
+<span class="text-syntax-green">Flash successful. Executing PythonVM runtime.</span>
+</div>
+<!-- Dynamic Data Simulation -->
+<div class="flex items-start gap-3 mb-1">
+<span class="font-timestamp text-timestamp text-text-secondary mt-[3px]">[10:45:15]</span>
+<span class="text-text-dimmed italic">LDR_SENSOR_VAL: 482</span>
+</div>
+<div class="flex items-start gap-3 mb-1">
+<span class="font-timestamp text-timestamp text-text-secondary mt-[3px]">[10:45:16]</span>
+<span class="text-text-dimmed italic">LDR_SENSOR_VAL: 481</span>
+</div>
+<!-- Cursor Animation -->
+<div class="flex items-start gap-3 mt-4">
+<span class="text-primary font-bold">&gt;</span>
+<span class="w-2 h-4 bg-primary cursor-blink ml-[-4px]"></span>
+</div>
+</div>
+<!-- Command Input Box -->
+<div class="p-4 border-t border-border-subtle bg-surface-container-low">
+<div class="relative flex items-center bg-background rounded-full border border-border-primary hover:border-primary transition-colors pr-2">
+<input class="flex-1 bg-transparent border-none focus:ring-0 text-on-surface font-body-md py-3 px-6 placeholder-text-secondary" placeholder="Send a command" type="text"/>
+<button class="bg-primary-container text-on-primary-container w-10 h-10 flex items-center justify-center rounded-full active:scale-90 transition-transform shadow-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center h-button-height bg-surface-container-low border-t border-border-subtle shadow-lg">
+<!-- Tab: CODE -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary group transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">code</span>
+<span class="font-label-lg text-label-lg">CODE</span>
+</a>
+<!-- Tab: CONSOLE (Active) -->
+<a class="flex flex-col items-center justify-center text-tertiary animate-pulse" href="#">
+<span class="material-symbols-outlined text-[24px]" style="font-variation-settings: 'FILL' 1;">terminal</span>
+<span class="font-label-lg text-label-lg border-b-2 border-tertiary">CONSOLE</span>
+</a>
+<!-- Tab: DEBUG -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary group transition-colors" href="#">
+<span class="material-symbols-outlined text-[24px]">bug_report</span>
+<span class="font-label-lg text-label-lg">DEBUG</span>
+</a>
+</nav>
+<!-- Floating Action Button Contextual (Hidden on Console as requested by suppression rule, but keeping logic for future ref) -->
+<div class="hidden" id="fab-container">
+<button class="fixed right-6 bottom-20 w-14 h-14 bg-primary text-on-primary rounded-xl shadow-2xl flex items-center justify-center active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[32px]">play_arrow</span>
+</button>
+</div>
+<script>
+        // Micro-interaction: Auto-scroll console to bottom
+        const consoleOutput = document.getElementById('terminal-output');
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+
+        // Interaction for input field focus
+        const inputField = document.querySelector('input');
+        inputField.addEventListener('focus', () => {
+            inputField.parentElement.classList.add('border-primary');
+        });
+        inputField.addEventListener('blur', () => {
+            inputField.parentElement.classList.remove('border-primary');
+        });
+
+        // Simple typing effect for "simulation"
+        const addMessage = (msg, type = 'normal') => {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const div = document.createElement('div');
+            div.className = 'flex items-start gap-3 mb-2 opacity-0 transform translate-y-2 transition-all duration-300';
+            
+            let textColor = 'text-on-surface';
+            if (type === 'success') textColor = 'text-syntax-green';
+            if (type === 'system') textColor = 'text-syntax-blue';
+            if (type === 'cmd') textColor = 'text-syntax-red font-semibold';
+
+            div.innerHTML = `
+                <span class="font-timestamp text-timestamp text-text-secondary mt-[3px]">[${time}]</span>
+                <span class="${textColor}">${msg}</span>
+            `;
+            
+            consoleOutput.insertBefore(div, consoleOutput.lastElementChild);
+            setTimeout(() => {
+                div.classList.remove('opacity-0', 'translate-y-2');
+                consoleOutput.scrollTop = consoleOutput.scrollHeight;
+            }, 50);
+        };
+
+        // Simulate some background noise
+        setInterval(() => {
+            if (Math.random() > 0.8) {
+                const val = Math.floor(Math.random() * 1024);
+                addMessage(`HEARTBEAT: Memory usage 42% | Buffer ${val}`, 'normal');
+            }
+        }, 5000);
+    </script>
+</body></html>
