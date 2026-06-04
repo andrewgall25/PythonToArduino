@@ -39,10 +39,10 @@ class MainActivity : ComponentActivity() {
     private var usbReceiver: UsbBroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
         // Gestisce la transizione dal tema Splash al tema dell'app
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
 
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(this))

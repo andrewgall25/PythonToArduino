@@ -24,10 +24,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
@@ -263,6 +267,7 @@ private fun toJsString(text: String): String {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun PythonToArduinoUI(
@@ -396,28 +401,17 @@ fun PythonToArduinoUI(
     }
 
     var selectedTabIndex by remember { mutableIntStateOf(0) }
+    val isKeyboardOpen = WindowInsets.isImeVisible
 
     Scaffold(
-        topBar = {
-            Column {
-                AppTopBar(
-                    fileName = fileName,
-                    onFileNameChange = onFileNameChange,
-                    onSaveClick = { onSaveFile(pythonCode, fileName) },
-                    onPasteClick = { pasteFromClipboard(persistentWebView, context) },
-                    onCopyClick = { copyToClipboard(persistentWebView, context) },
-                    onClearClick = { clearEditor(persistentWebView) },
-                    cursorPosition = cursorPosition,
-                    onCheckUsb = onCheckUsb,
-                    onCompileAndFlash = { onCompileAndFlash(pythonCode) }
-                )
+        bottomBar = {
+            if (!isKeyboardOpen) {
+                BottomNavBar(selectedTabIndex = selectedTabIndex) { index ->
+                    selectedTabIndex = index
+                }
             }
         },
-        bottomBar = {
-            BottomNavBar(selectedTabIndex = selectedTabIndex) { index ->
-                selectedTabIndex = index
-            }
-        }
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0)
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -432,6 +426,19 @@ fun PythonToArduinoUI(
                     )
                 )
         ) {
+            // Custom app top bar — title + settings menu
+            AppTopBar(
+                fileName = fileName,
+                onFileNameChange = onFileNameChange,
+                onSaveClick = { onSaveFile(pythonCode, fileName) },
+                onPasteClick = { pasteFromClipboard(persistentWebView, context) },
+                onCopyClick = { copyToClipboard(persistentWebView, context) },
+                onClearClick = { clearEditor(persistentWebView) },
+                cursorPosition = cursorPosition,
+                onCheckUsb = onCheckUsb,
+                onCompileAndFlash = { onCompileAndFlash(pythonCode) }
+            )
+
             UsbStatusMessage(
                 showUsbStatusMessage = showUsbStatusMessage,
                 usbStatus = usbStatus,
@@ -493,7 +500,8 @@ fun PythonToArduinoUI(
                             },
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .padding(end = 24.dp, bottom = 16.dp)
+                                .padding(end = 24.dp)
+                                .padding(bottom = 16.dp)
                                 .size(56.dp),
                             shape = RoundedCornerShape(16.dp),
                             containerColor = HtmlColors.Primary,

@@ -75,8 +75,9 @@ fun UsbStatusMessage(
                         }
                     }
                 },
-            shape = RectangleShape, // <-- aggiunto per rimuovere angoli arrotondati
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFFFCCBC))
+            shape = RoundedCornerShape(8.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF31353C)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
         ) {
             Row(
                 modifier = Modifier
@@ -88,13 +89,13 @@ fun UsbStatusMessage(
                 Icon(
                     imageVector = Icons.Default.Usb,
                     contentDescription = "USB Status",
-                    tint = Color.Black.copy(alpha = 0.7f),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = usbStatus,
-                    color = Color.Black.copy(alpha = 0.8f),
+                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold
                 )

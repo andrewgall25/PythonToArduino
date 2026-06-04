@@ -39,30 +39,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // 2. Modifica il callback nel init o dove inizializzi outputStream
     private val outputStream = PythonOutputStream { text ->
         viewModelScope.launch(Dispatchers.Main) {
-            // Accumuliamo il testo che arriva (sia da Python che da Arduino)
             arduinoLineBuffer += text
 
-            // Se il buffer contiene un carattere di "a capo"
-            if (arduinoLineBuffer.contains("\n")) {
-                val lines = arduinoLineBuffer.split("\n")
+            // 1. Processa tutte le righe complete
+            while (arduinoLineBuffer.contains("\n")) {
+                val newlineIndex = arduinoLineBuffer.indexOf("\n")
+                val line = arduinoLineBuffer.substring(0, newlineIndex)
+                arduinoLineBuffer = arduinoLineBuffer.substring(newlineIndex + 1)
 
-                // Processiamo tutte le righe complete (tranne l'ultima che potrebbe essere incompleta)
-                for (i in 0 until lines.size - 1) {
-                    val completeLine = lines[i].trim()
-                    if (completeLine.isNotEmpty()) {
-
-                        // --- LOGICA DI FILTRO ---
-                        if (completeLine.startsWith("SET:")) {
-                            // Invia il comando ad Arduino ma NON stamparlo nella UI (per pulizia)
-                            sendToSerial(completeLine)
-                        } else {
-                            // Stampa nella UI solo i messaggi veri (es. "LED 13 ACCESO")
-                            appendOutput(completeLine)
-                        }
-                    }
+                if (line.startsWith("SET:")) {
+                    sendToSerial(line)
+                } else {
+                    writePythonOutput(line + "\n")
                 }
-                // Teniamo l'ultimo pezzo (incompleto) nel buffer
-                arduinoLineBuffer = lines.last()
+            }
+
+            // 2. Processa l'eventuale testo incompleto rimanente (es. prompt di input)
+            if (arduinoLineBuffer.isNotEmpty()) {
+                val isPossibleCommand = arduinoLineBuffer.startsWith("SET:") ||
+                        arduinoLineBuffer == "SET" ||
+                        arduinoLineBuffer == "SE" ||
+                        arduinoLineBuffer == "S"
+                if (!isPossibleCommand) {
+                    writePythonOutput(arduinoLineBuffer)
+                    arduinoLineBuffer = ""
+                }
             }
         }
     }
@@ -172,8 +173,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun appendOutput(text: String) {
-        appendTimestampIfNeeded()
-        _output.value = (_output.value ?: "") + text + "\n"
+        viewModelScope.launch(Dispatchers.Main) {
+            appendTimestampIfNeeded()
+            _output.value = (_output.value ?: "") + text + "\n"
+        }
+    }
+
+    private fun writePythonOutput(text: String) {
+        viewModelScope.launch(Dispatchers.Main) {
+            appendTimestampIfNeeded()
+            _output.value = (_output.value ?: "") + text
+        }
     }
 
     // ========================= GESTIONE ULTIMO FILE =========================

@@ -2,7 +2,7 @@ import requests
 import json
 
 def send_python_to_server(py_code):
-    url = "http://192.168.1.6:5000/build"
+    url = "http://192.168.1.103:5000/build"
     print(f"Sending POST request to{url}")
     print(f"Python code sent:\n{py_code[:100]}...")
     try:

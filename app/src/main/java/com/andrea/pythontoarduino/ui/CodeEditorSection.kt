@@ -8,20 +8,15 @@ import android.webkit.ValueCallback
 import android.webkit.WebView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.Alignment
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.viewinterop.AndroidView
-import org.json.JSONArray
-import com.andrea.pythontoarduino.ui.JSBridge
+
 /**
  * Composable function to display and manage the Monaco Editor within a persistent Android WebView.
  * This component now receives the WebView instance and state from a higher-level parent,
@@ -55,7 +50,6 @@ fun CodeEditorSection(
 
     val context = LocalContext.current
 
-
     Box(modifier = modifier.fillMaxSize()) {
         AndroidView(
             factory = {
@@ -83,17 +77,6 @@ fun CodeEditorSection(
             },
             modifier = Modifier.fillMaxSize(),
             update = { /* nessun aggiornamento necessario qui */ }
-        )
-
-        ActionButtons(
-            pythonCode = pythonCode,
-            isPythonRunning = isPythonRunning,
-            isUsbChecking = isUsbChecking,
-            onCheckUsb = onCheckUsb,
-            onRunPython = onRunPython,
-            onCancelPythonExecution = onCancelPythonExecution,
-            onCompileAndFlash = onCompileAndFlash,
-            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp)
         )
     }
 
